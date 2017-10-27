@@ -104,7 +104,7 @@ library(matrixStats);library(plyr)
 file_drive= "C:"
 file_drive="E:"
 
-directory = paste0(file_drive,"/Dropbox/Lab/Research/Projects/Current/Gay")
+directory = paste0(file_drive,"/Dropbox/Lab/Research/Projects/Current/ANES-Changes")
 #
 content_folder = paste0(directory,"/Common/content")
 data_folder = paste0(content_folder,"/data")
