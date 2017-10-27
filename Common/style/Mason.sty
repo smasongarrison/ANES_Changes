@@ -1,0 +1,216 @@
+%----------------------------------------------------------------------------------------
+% 		Packages 
+%----------------------------------------------------------------------------------------
+%%%%%% Formating %%%%%%
+%% Font
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8x,ascii]{inputenc} %% Additional Characters
+%% Math
+\usepackage{amsmath}
+\usepackage{amssymb}       
+%% Date
+\usepackage[mmddyyyy,hhmmss]{datetime}
+%% Lists
+%\usepackage{enumitem}%resume numbering
+
+%%%%%% Layout %%%%%%
+\usepackage[pdftex]{lscape} % for landscaped tables
+\usepackage{pdflscape}
+\usepackage{changepage}
+\usepackage{xspace}
+
+%%%%%% References %%%%%%
+\usepackage{varioref} %references page location
+\usepackage{hyperref}
+\usepackage[natbibapa,nodoi]{apacite}
+\usepackage[longnamesfirst]{natbib}
+
+
+%%%%%% Graphics %%%%%%
+\usepackage{graphicx}\graphicspath{{../Common/graphics/}}
+\usepackage[graphicx]{realboxes}
+%%% Animate
+\usepackage{animate}
+\usepackage{media9}
+
+%----------------------------------------------------------------------------------------
+% 		R 
+%----------------------------------------------------------------------------------------
+\usepackage{listings}
+\usepackage{inconsolata}
+\usepackage{verbatim}
+\usepackage{etoolbox}
+\usepackage[svgnames]{xcolor}
+%
+% Color Definitions
+%-----------------
+\definecolor{black}{rgb}{0,0,0}
+\definecolor{keywordcolor}{rgb}{0,0.6,0.6}
+\definecolor{delimcolor}{rgb}{0.461,0.039,0.102}
+\definecolor{Rcommentcolor}{rgb}{0.101,0.043,0.432}
+\definecolor{messagecolor}{rgb}{0.101,0.043,0.432}
+%-----------------
+% Set up your listings. You can type `texdoc listings` in your terminal
+
+\lstdefinestyle{Rsettings}{
+  language=R,
+  basicstyle=\ttfamily\color{black},
+  breaklines=true,
+  showstringspaces=false,
+  keywords={if, else, function, theFunction, tmp},
+  otherkeywords={},
+  commentstyle=\itshape\color{Rcommentcolor},
+  keywordstyle=\color{keywordcolor},
+  moredelim=[s][\color{delimcolor}]{"}{"},
+}
+%
+%%%%%% APA 6 overides %%%%%%
+%% Fix indents for tables
+\AtBeginEnvironment{tabular}{\noindent}
+\AtBeginEnvironment{longtable}{\noindent}
+%
+%----------------------------------------------------------------------------------------
+% 		Commands 
+%----------------------------------------------------------------------------------------
+%% Short Hand
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+
+\newcommand{\R}{\textup{\textrm{R}}\xspace}
+\newcommand{\meb}{{\bf Garrison, S. M}\onedot}
+\newcommand{\et}{\textit{et al}\onedot}
+\newcommand{\etal}{\et}
+\newcommand{\etc}{\textit{etc}\onedot}
+\def\ie{{\textit{i.e}}\onedot} \def\Ie{{\textit{I.e}}\onedot}
+\def\cf{{\textit{c.f}}\onedot} \def\Cf{{\textit{C.f}}\onedot}
+\def\dof{d.o.f\onedot}
+\def\eg{{\textit{e.g}}\onedot} \def\Eg{{\textit{E.g}}\onedot}
+\def\vs{{vs}\onedot}
+\def\wrt{w.r.t\onedot}
+
+%% In line Comments
+\usepackage[colorinlistoftodos]{todonotes}
+\newcommand{\cil}[1]{\todo[inline, color=green!40]{#1}}
+
+%%% Remove DOI %UNCOMMENT ALL to toggle between DOI and URL
+\usepackage{environ}
+\newtoggle{bibdoi}
+%\newtoggle{biburl}
+\makeatletter
+
+%\undef{\APACrefURL}
+%\undef{\endAPACrefURL}
+\undef{\APACrefDOI}
+\undef{\endAPACrefDOI}
+
+%\long\def\collect@url#1{\global\def\bib@url{#1}}
+\long\def\collect@doi#1{\global\def\bib@doi{#1}}
+%\newenvironment{APACrefURL}{\global\toggletrue{biburl}\Collect@Body\collect@url}{\unskip\unskip}
+\newenvironment{APACrefDOI}{\global\toggletrue{bibdoi}\Collect@Body\collect@doi}{}
+
+%\AtBeginEnvironment{thebibliography}{
+% \pretocmd{\PrintBackRefs}{%
+%  \iftoggle{bibdoi}
+%    {\iftoggle{biburl}{\unskip\unskip doi:\bib@doi}{}}
+%    {\iftoggle{biburl}{Retrieved from\bib@url}{}}
+%  \togglefalse{bibdoi}\togglefalse{biburl}%
+%  }{}{}
+%}
+%%% Partial Input
+\makeatletter
+\newread\pin@file
+\newcounter{pinlineno}
+\newcommand\pin@accu{}
+\newcommand\pin@ext{pintmp}
+% inputs #3, selecting only lines #1 to #2 (inclusive)
+\newcommand*\partialinput [3] {%
+  \IfFileExists{#3}{%
+    \openin\pin@file #3
+    % skip lines 1 to #1 (exclusive)
+    \setcounter{pinlineno}{1}
+    \@whilenum\value{pinlineno}<#1 \do{%
+      \read\pin@file to\pin@line
+      \stepcounter{pinlineno}%
+    }
+    % prepare reading lines #1 to #2 inclusive
+    \addtocounter{pinlineno}{-1}
+    \let\pin@accu\empty
+    \begingroup
+    \endlinechar\newlinechar
+    \@whilenum\value{pinlineno}<#2 \do{%
+      % use safe catcodes provided by e-TeX's \readline
+      \readline\pin@file to\pin@line
+      \edef\pin@accu{\pin@accu\pin@line}%
+      \stepcounter{pinlineno}%
+    }
+    \closein\pin@file
+    \expandafter\endgroup
+    \scantokens\expandafter{\pin@accu}%
+  }{%
+    \errmessage{File `#3' doesn't exist!}%
+  }%
+}
+\makeatother
+
+%%% Single Line Filler Text
+\makeatletter
+\newcounter{fillersentencecounter}
+\setcounter{fillersentencecounter}{1}
+\newread\pin@file
+
+\newcommand*\fillersentence [2] {%
+  \IfFileExists{#2}{%
+    \openin\pin@file #2
+
+    \setcounter{pinlineno}{1}
+    \@whilenum\value{pinlineno}<\value{fillersentencecounter} \do{%
+      \read\pin@file to\pin@line
+      \stepcounter{pinlineno}%
+    }
+    \addtocounter{fillersentencecounter}{#1}
+    \addtocounter{fillersentencecounter}{-1}
+    \addtocounter{pinlineno}{-1}
+    \let\pin@accu\empty
+    \begingroup
+    \endlinechar\newlinechar
+    \@whilenum\value{pinlineno}<\value{fillersentencecounter} \do{%
+      \readline\pin@file to\pin@line
+      \edef\pin@accu{\pin@accu\pin@line}%
+      \stepcounter{pinlineno}%
+    }
+    \addtocounter{fillersentencecounter}{1}
+    \closein\pin@file
+    \expandafter\endgroup
+    \scantokens\expandafter{\pin@accu}%
+  }{%
+    \errmessage{File `#2' doesn't exist!}%
+  }%
+}
+\makeatother
+
+%%% Nicer Looking Square Root
+\let\oldsqrt\sqrt
+% it defines the new \sqrt in terms of the old one
+\def\sqrt{\mathpalette\DHLhksqrt}
+\def\DHLhksqrt#1#2{%
+\setbox0=\hbox{$#1\oldsqrt{#2\,}$}\dimen0=\ht0
+\advance\dimen0-0.2\ht0
+\setbox2=\hbox{\vrule height\ht0 depth -\dimen0}%
+{\box0\lower0.4pt\box2}}
+
+%%% Hypothesis counters
+\newcounter{myhypothesis}
+\newcommand\hypothesis[1]
+{
+  \refstepcounter{myhypothesis}\label{hyp_#1}%
+}
+%%% Slanty fractions
+\newcommand{\slantfrac}[2]{\,^#1\!/_#2}
+
+
+%%Comments
+\usepackage[colorinlistoftodos]{todonotes}
+\newcommand{\cil}[1]{\todo[inline,size=\tiny, color=green!40]{#1}}
+\newcommand{\cm}[1]{\todo[color=green!40,size=\tiny]{#1}}

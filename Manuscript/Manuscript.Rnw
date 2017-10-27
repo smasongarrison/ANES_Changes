@@ -1,0 +1,248 @@
+\documentclass[a4paper,doc,apacite,natbib,12pt,longtable]{apa6}
+\usepackage{../Common/style/Mason}
+\usepackage{listings}
+\usepackage{inconsolata}
+\usepackage[bottom]{footmisc} %fix footnotes
+%%%%%%%%%% TIKZ Style
+\usepackage{tikz}
+\usepackage{amsmath}
+\usetikzlibrary{arrows,positioning}
+\usetikzlibrary{calc}
+\usepackage{relsize}
+\tikzset{variance/.style={<->, >=stealth', bend left=260, looseness=3},covar/.style={<->, >=stealth', bend left=260, looseness=1},
+fontscale/.style = {font=\relsize{#1}}}
+%\usepackage{lineno}
+%\linenumbers
+\setlength{\parindent}{4em}
+\setlength{\parskip}{1em}
+\renewcommand{\baselinestretch}{1.5}
+\interfootnotelinepenalty=10000
+%%%%%%%%%%%% Title %%%%%%%%%%%%
+\title{GAY ANES}
+\shorttitle{GAY ANES}
+%
+% Authors and Affiliations
+\author{S. Mason Garrison}% and Joseph Lee Rodgers}
+\affiliation{Vanderbilt University}
+%
+% Author Note
+%\authornote{\input{../Common/content/title/authornote.tex}}
+%
+% Abstract
+\abstract{Last compiled \today\ at \currenttime\\
+%\input{../Common/content/title/abstract_empreport.txt}
+}
+%
+% Key Words
+%\keywords{Discordant Sibling Design; Quasi-Experimental; Siblings}
+%
+\begin{document}
+\maketitle
+\begin{landscape}
+<<Knitrsetup,echo=FALSE,include=TRUE>>=
+####### Sweave/Knitr Set Up #######
+# Global
+## Options
+### R code width
+  options(width=60)
+##
+### Scientific Notation, magnitude needed for 
+  options(scipen=999)
+##
+### Round
+  options(digits=2)
+## Header
+opts_knit$set(progress = TRUE, verbose = FALSE)
+  
+# Knitr hooks
+  
+# Local
+local({
+  hook_chunk = knit_hooks$get('chunk')
+  knit_hooks$set(chunk = function(x, options) {
+    x = hook_chunk(x, options)
+    if (options$results == 'asis' && !options$echo && options$fig.num == 0) {
+      # remove all kframe's
+      gsub('\\\\(begin|end)\\{kframe\\}', '', x)
+    } else  x
+  })
+})
+
+ knit_hooks$set(source = function(x, options) {
+   if (options$results == 'asis' && !options$echo && options$fig.num == 0) {
+         x
+   } else {
+         paste0("\\begin{lstlisting}[style=Rsettings]\n", x, "\\end{lstlisting}\n")}
+   })
+ 
+knit_hooks$set(document = function(x) {
+  sub('\\usepackage[]{color}', '\\usepackage{xcolor}', x, fixed = TRUE)
+  })
+
+
+#bib text
+Sys.setenv(TEXINPUTS=getwd(),
+           BSTINPUTS=getwd(),
+           BIBINPUTS="C:/texlive/texmf-local/bibtex/bib/local")
+           #RSTUDIO_PDFLATEX = Sys.which("latexmk"))
+@
+%
+\section{setup}
+<<setup,include=TRUE>>=
+# Libraries
+## Install Most Current Version
+library(devtools)#;dev_mode(on=T)
+#install_github("LiveOak/NlsyLinks")
+#install_github("harrelfe/Hmisc");dev_mode(on=F)
+## Attach Remaining
+library(NlsyLinks)
+library(readr)
+library(MplusAutomation);library(qlcMatrix)
+library(matrixStats);library(plyr)
+#
+# File Structure
+file_drive= "C:"
+file_drive="E:"
+
+directory = paste0(file_drive,"/Dropbox/Lab/Research/Projects/Current/Gay")
+#
+content_folder = paste0(directory,"/Common/content")
+data_folder = paste0(content_folder,"/data")
+mplus_folder = paste0(content_folder,"/analyses/mplus")
+r_folder = paste0(content_folder,"/analyses/r/")
+tables_folder = paste0(content_folder,"/tables")
+slides_folder = paste0(content_folder,"/slides")
+writing_folder = paste0(content_folder,"/writing")
+
+# Functions
+source(paste0(directory,"/Common/content/functions/r/MasonHelperFunctions.R"))
+
+##error function
+efunc <- function(error){
+  return(NA) 
+  # You can check the error if you want
+  # print(error)
+}
+@
+%%%%%%DATA
+<<>>=
+library(haven)
+library(ggplot2);library(Hmisc)
+anes <- read_sav(paste0(directory,"/Common/content/data/anes_timeseries_2016.sav"))
+
+anes$gay=0
+
+anes$gay[anes$V161511>1]=1
+
+anes$V161270[anes$V161270>16]=NA
+
+
+anes$party_pres_vote=as.numeric(NA)
+anes$party_pres_vote[anes$V161064x==10]=1
+anes$party_pres_vote[anes$V161064x==11]=0
+anes$party_pres_vote[anes$V161064x==12]=.5
+anes$party_pres_vote[anes$V161064x==20]=1
+anes$party_pres_vote[anes$V161064x==21]=0
+anes$party_pres_vote[anes$V161064x==22]=.5
+
+anes$party_pres_vote[anes$V161064x==30]=1
+anes$party_pres_vote[anes$V161064x==31]=0
+anes$party_pres_vote[anes$V161064x==32]=.5
+anes$party_pres_vote=as.factor(anes$party_pres_vote)
+anes_na=anes
+anes_na[anes_na < 0] <- NA
+
+
+ggplot(data=anes, aes(x = V162336, group = gay))+geom_bar(aes(fill =gay))
+######gay
+lm(data=anes_na,V162336~gay)
+
+
+# fear
+summary(lm(data=anes_na,V161123~gay))
+
+#anger
+summary(lm(data=anes_na, V161121~gay))
+
+#disgust
+summary(lm(data=anes_na, V161125~gay))
+
+#hope V161122
+summary(lm(data=anes_na, V161122~gay))
+## 'anxious, easily upset', low scores less anxious
+ggplot(data=anes_na,aes(y=V162336,x=gay))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: disgusted
+ggplot(data=anes_na,aes(y=V161125,x=gay))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: afraid
+ggplot(data=anes_na,aes(y=V161123,x=gay))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#pre election election7pt lib
+ggplot(data=anes_na,aes(y=V162336,x=gay))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+#PRE: SUMMARY - party of Pre-election Presidential vote/intent/preference
+ggplot(data=anes_na,aes(x=party_pres_vote,y=gay))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#education V161270
+
+ggplot(data=anes_na[anes_na$gay==1,],aes(y=V162336,x=V161270))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+cor(anes_na$V162336[anes_na$gay==1],anes_na$V161270[anes_na$gay==1],use="pairwise.complete")
+
+#income V161361x
+ggplot(data=anes_na[anes_na$gay==1,],aes(y=V162336,x=V161361x))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+cor(anes_na$V162336[anes_na$gay==1],anes_na$V161361x[anes_na$gay==1],use="pairwise.complete")
+
+
+
+##hispanic
+## 'anxious, easily upset', low scores less anxious
+ggplot(data=anes_na,aes(y=V162336,x=V161309))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: disgusted
+ggplot(data=anes_na,aes(y=V161125,x=V161309))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: afraid
+ggplot(data=anes_na,aes(y=V161123,x=V161309))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#pre election election7pt lib
+ggplot(data=anes_na,aes(y=V162336,x=V161309))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+
+###black
+## 'anxious, easily upset', low scores less anxious
+ggplot(data=anes_na,aes(y=V162336,x=V161310b))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: disgusted
+ggplot(data=anes_na,aes(y=V161125,x=V161310b))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+## Affect for Republican Pres cand: afraid
+ggplot(data=anes_na,aes(y=V161123,x=V161310b))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#pre election election7pt lib
+ggplot(data=anes_na,aes(y=V162336,x=V161310b))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+
+
+
+
+
+#Indian=1 ## 'anxious, easily upset', low scores less anxious
+ggplot(data=anes_na,aes(y=V162336,x=V161310c))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#pre election liberal, conservative, moderate
+ggplot(data=anes_na,aes(y=V162336,x=V161127))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()
+
+#pre election7pt lib
+ggplot(data=anes_na,aes(y=V162336,x=V161126))+ stat_summary(fun.data = "mean_cl_boot", size = 2)+theme_bw()+coord_cartesian(xlim = c(0, 7)) 
+
+ggplot(data=anes_na,aes(y=V162336,x=V161126))+geom_smooth(method="loess")+theme_bw()+xlim(0, 7)
+
+
+
+@
+%%%%%%%%%%%% References %%%%%%%%%%%%
+\bibliographystyle{apacite}
+
+\bibliography{C:/texlive/texmf-local/bibtex/bib/local/Projects-Kinship}
+\end{landscape}
+\end{document}

@@ -1,0 +1,49 @@
+%%%%%%%%%%%% Packages %%%%%%%%%%%%
+
+
+
+\usepackage[first=-30, last=30]{lcg}
+
+
+%% Beamer Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\useoutertheme[subsection=false,shadow]{miniframes}
+\useinnertheme{default}
+\usefonttheme{serif}
+\usepackage{palatino}
+
+\setbeamerfont{title like}{shape=\scshape}
+\setbeamerfont{frametitle}{shape=\scshape}
+
+\setbeamercolor*{lower separation line head}{bg=DeepSkyBlue4} 
+\setbeamercolor*{normal text}{fg=black,bg=white} 
+\setbeamercolor*{alerted text}{fg=red} 
+\setbeamercolor*{example text}{fg=black} 
+\setbeamercolor*{structure}{fg=black} 
+ 
+\setbeamercolor*{palette tertiary}{fg=black,bg=black!10} 
+\setbeamercolor*{palette quaternary}{fg=black,bg=black!10} 
+
+\renewcommand{\(}{\begin{columns}}
+\renewcommand{\)}{\end{columns}}
+\newcommand{\<}[1]{\begin{column}{#1}}
+\renewcommand{\>}{\end{column}}
+
+
+
+%% New Commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand*{\RandomShape}[1][DeepSkyBlue4]{
+\begin{tikzpicture}[decoration=Koch curve type 2] 
+	\pgfmathsetmacro{\Xa}{rand*2}
+	\pgfmathsetmacro{\Xb}{rand*2}
+	\pgfmathsetmacro{\y}{random*2}
+		\pgfmathsetmacro{\ya}{1-\y}
+				\pgfmathsetmacro{\yb}{2+\y}
+		\draw[#1] decorate{ decorate{ decorate{ (\ya,\Xb) -- (\yb,\Xa) }}}; 
+	\end{tikzpicture}
+}
+\pgfmathsetseed{\number\pdfrandomseed}
+\makeatletter
+\def\pgfcurrentseed{%
+\pgfmathparse{\pgfmath@rnd@z}\pgfmathresult%
+}
+\makeatother
